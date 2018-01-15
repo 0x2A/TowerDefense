@@ -1,0 +1,12 @@
+Binaries
+DerivedDataCache
+Intermediate
+Saved
+BluCache
+*.opensdf
+*.opendb
+*.sdf
+*.sln
+*.suo
+*.xcodeproj
+Build/WindowsNoEditor/FileOpenOrder/CookerOpenOrder.log
