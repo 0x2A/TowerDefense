@@ -3,10 +3,12 @@ DerivedDataCache
 Intermediate
 Saved
 BluCache
+.vs
 *.opensdf
 *.opendb
 *.sdf
 *.sln
 *.suo
+*.VC.db
 *.xcodeproj
 Build/WindowsNoEditor/FileOpenOrder/CookerOpenOrder.log
