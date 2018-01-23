@@ -3,6 +3,7 @@
 #include "Tower.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/SphereComponent.h"
+#include "Kismet/KismetMathLibrary.h"
 
 // Sets default values
 ATower::ATower()
@@ -22,7 +23,8 @@ ATower::ATower()
 	ShootTriggerVolume->AttachToComponent(TowerBase, FAttachmentTransformRules::KeepRelativeTransform);
 	ShootTriggerVolume->SetSphereRadius(ShootingRange);
 	
-	
+	ShootTriggerVolume->OnComponentBeginOverlap.AddDynamic(this, &ATower::OnShootTriggerOverlapBegin);
+	ShootTriggerVolume->OnComponentEndOverlap.AddDynamic(this, &ATower::OnShootTriggerOverlapEnd);
 }
 
 // Called when the game starts or when spawned
@@ -37,6 +39,49 @@ void ATower::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	UpdateGunRotation(DeltaTime);
+}
+
+
+void ATower::UpdateGunRotation(float DeltaTime)
+{
+	if (TargetLocked && Target)
+	{
+		//lock rotation to target
+		FRotator rot = FRotationMatrix::MakeFromX(Target->GetActorLocation() - TowerGun->GetComponentLocation()).Rotator();
+		rot.Roll = 0; //dont roll our gun, this will look stupid ;)
+		rot.Pitch = FMath::Clamp(rot.Pitch, -30.0f, 30.0f);
+		TowerGun->SetWorldRotation(UKismetMathLibrary::RInterpTo(TowerGun->GetComponentRotation(), rot, DeltaTime, 7.f));
+	}
+	else
+	{
+		//return to "idle" position
+		FRotator rot = TowerGun->GetComponentRotation();
+		rot.Roll = 0.0f;
+		rot.Pitch = 0.0f;
+		rot.Yaw = rot.Yaw + 2.0f;
+
+		TowerGun->SetWorldRotation(UKismetMathLibrary::RInterpTo(TowerGun->GetComponentRotation(), rot, DeltaTime, 7.f));
+	}
+}
+
+void ATower::OnShootTriggerOverlapBegin_Implementation(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (OtherActor && (OtherActor != this) && OtherComp)
+	{
+		Target = OtherActor;
+		TargetLocked = true;
+		UpdateGunRotation(GetWorld()->GetDeltaSeconds());
+	}
+}
+
+void ATower::OnShootTriggerOverlapEnd_Implementation(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	if (OtherActor && (OtherActor != this) && OtherComp && Target == OtherActor)
+	{
+		TargetLocked = false;
+		Target = nullptr;
+	}
 }
 
 #if WITH_EDITOR
