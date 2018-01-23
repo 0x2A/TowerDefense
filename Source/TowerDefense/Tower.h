@@ -20,26 +20,45 @@ public:
 
 	
 	UFUNCTION(BlueprintNativeEvent, Category = "Gameplay")
-		void OnShootTriggerOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	void OnShootTriggerOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
 	UFUNCTION(BlueprintNativeEvent, Category = "Gameplay")
-		void OnShootTriggerOverlapEnd(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+	void OnShootTriggerOverlapEnd(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
 	UFUNCTION(BlueprintCallable, Category="Gameplay")
-		void UpdateGunRotation(float DeltaTIme);
+	void UpdateGunRotation(float DeltaTIme);
+
+	UFUNCTION(BlueprintCallable, Category = "Gameplay")
+	void Shoot();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
-		float ShootingRange;
+	float ShootingRange;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Gameplay)
-		bool TargetLocked;
+	bool TargetLocked;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
+	TSubclassOf<class AProjectileBase> ProjectileClass;
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gameplay|Projectile")
+	float ShootDelay;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gameplay|Projectile")
+	float InitialShootDelay;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gameplay|Projectile")
+	float ProjectileSpeed;
+
+
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 private:
 
-
+	void InternalShoot();
 
 #if WITH_EDITOR
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
@@ -56,4 +75,6 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Gameplay, meta = (AllowPrivateAccess = "true"))
 		class USphereComponent* ShootTriggerVolume;
+
+	FTimerHandle ShootingDelayTimer;
 };

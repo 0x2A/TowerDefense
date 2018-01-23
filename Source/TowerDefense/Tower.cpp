@@ -1,9 +1,11 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Tower.h"
+#include "TowerDefense.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/SphereComponent.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "ProjectileBase.h"
 
 // Sets default values
 ATower::ATower()
@@ -11,6 +13,10 @@ ATower::ATower()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	ShootingRange = 600.0f;
+
+	InitialShootDelay = 1.0f;
+	ShootDelay = 0.5f;
+	ProjectileSpeed = 2000.0f;
 
 	TowerBase = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("TowerBase"));
 	TowerBase->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepWorldTransform);
@@ -22,7 +28,8 @@ ATower::ATower()
 	ShootTriggerVolume->SetRelativeLocation(FVector(0, 0, 270.0f));
 	ShootTriggerVolume->AttachToComponent(TowerBase, FAttachmentTransformRules::KeepRelativeTransform);
 	ShootTriggerVolume->SetSphereRadius(ShootingRange);
-	
+	ShootTriggerVolume->SetCollisionResponseToChannel(COLLISION_PROJECTILE, ECR_Ignore);
+
 	ShootTriggerVolume->OnComponentBeginOverlap.AddDynamic(this, &ATower::OnShootTriggerOverlapBegin);
 	ShootTriggerVolume->OnComponentEndOverlap.AddDynamic(this, &ATower::OnShootTriggerOverlapEnd);
 }
@@ -34,12 +41,14 @@ void ATower::BeginPlay()
 	
 }
 
+
 // Called every frame
 void ATower::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
 	UpdateGunRotation(DeltaTime);
+
 }
 
 
@@ -51,7 +60,7 @@ void ATower::UpdateGunRotation(float DeltaTime)
 		FRotator rot = FRotationMatrix::MakeFromX(Target->GetActorLocation() - TowerGun->GetComponentLocation()).Rotator();
 		rot.Roll = 0; //dont roll our gun, this will look stupid ;)
 		rot.Pitch = FMath::Clamp(rot.Pitch, -30.0f, 30.0f);
-		TowerGun->SetWorldRotation(UKismetMathLibrary::RInterpTo(TowerGun->GetComponentRotation(), rot, DeltaTime, 7.f));
+		TowerGun->SetWorldRotation(UKismetMathLibrary::RInterpTo(TowerGun->GetComponentRotation(), rot, DeltaTime, 10.f));
 	}
 	else
 	{
@@ -61,8 +70,28 @@ void ATower::UpdateGunRotation(float DeltaTime)
 		rot.Pitch = 0.0f;
 		rot.Yaw = rot.Yaw + 2.0f;
 
-		TowerGun->SetWorldRotation(UKismetMathLibrary::RInterpTo(TowerGun->GetComponentRotation(), rot, DeltaTime, 7.f));
+		TowerGun->SetWorldRotation(UKismetMathLibrary::RInterpTo(TowerGun->GetComponentRotation(), rot, DeltaTime, 10.f));
 	}
+}
+
+void ATower::Shoot()
+{
+	GetWorldTimerManager().SetTimer(ShootingDelayTimer, this, &ATower::InternalShoot, ShootDelay, true, InitialShootDelay);
+}
+
+
+void ATower::InternalShoot()
+{
+
+	if (ProjectileClass)
+	{
+		FTransform trans = TowerGun->GetSocketTransform("BarrelEnd");
+		AProjectileBase *a = GetWorld()->SpawnActor<AProjectileBase>(ProjectileClass, trans, FActorSpawnParameters());
+		a->SetSpeed(ProjectileSpeed);
+	}
+
+	if (!TargetLocked)
+		GetWorldTimerManager().ClearTimer(ShootingDelayTimer);
 }
 
 void ATower::OnShootTriggerOverlapBegin_Implementation(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -72,6 +101,7 @@ void ATower::OnShootTriggerOverlapBegin_Implementation(UPrimitiveComponent* Over
 		Target = OtherActor;
 		TargetLocked = true;
 		UpdateGunRotation(GetWorld()->GetDeltaSeconds());
+		Shoot();
 	}
 }
 
