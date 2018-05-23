@@ -19,6 +19,23 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+	UFUNCTION(BlueprintCallable)
+	void OnWheelMouseUp();
+
+	UFUNCTION(BlueprintCallable)
+		void OnWheelMouseDown();
+
+	UFUNCTION(BlueprintCallable)
+		void OnRotateCameraPressed();
+	
+	UFUNCTION(BlueprintCallable)
+		void OnRotateCameraReleased();
+
+	UFUNCTION(BlueprintCallable)
+		void OnMouseX(float dir);
+
+	UFUNCTION(BlueprintCallable)
+		void OnMouseY(float dir);
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -26,9 +43,42 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	UFUNCTION(BlueprintCallable, VisibleAnywhere)
+	UFUNCTION(BlueprintCallable)
 	void UpdateCameraLocationAndRotation();
 	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Camera)
+		float CameraRadius;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Camera)
+		float CameraZAngle;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Camera)
+		float CameraHeightAngle;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Camera)
+		bool bRotateCamera;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Camera)
+		float RotateSpeed;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Camera)
+		float ZoomSpeed;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Camera)
+		float RadiusMin;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Camera)
+		float RadiusMax;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Camera)
+		float MovementSpeed;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Camera)
+		float EdgeForwardAxis;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Camera)
+		float EdgeRightAxis;
+
 private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
